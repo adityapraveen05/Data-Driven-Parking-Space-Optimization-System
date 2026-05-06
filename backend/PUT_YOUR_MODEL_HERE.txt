@@ -1,0 +1,8 @@
+PLACE YOUR best.pt FILE HERE
+
+After downloading best.pt from Google Colab:
+1. Copy best.pt into this backend/ folder
+2. The app.py will automatically load it
+
+If best.pt is missing, the system will still work
+but YOLO prediction won't be available.

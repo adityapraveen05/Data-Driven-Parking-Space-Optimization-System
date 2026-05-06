@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>SRM Smart Bike Parking System</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --blue: #3B5BDB;
+    --blue-dark: #2f4abf;
+    --blue-light: #dbe4ff;
+    --green: #2f9e44;
+    --red: #e03131;
+    --orange: #e8590c;
+    --bg: #f0f2f5;
+    --white: #ffffff;
+    --text: #1a1d23;
+    --text-muted: #6b7280;
+    --border: #e5e7eb;
+    --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Plus Jakarta Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ===== PAGES ===== */
+  .page { display: none; min-height: 100vh; }
+  .page.active { display: flex; flex-direction: column; }
+
+  /* ===== ROLE SELECT ===== */
+  #page-role { align-items: center; justify-content: center; background: var(--bg); }
+  .role-container { text-align: center; padding: 2rem; }
+  .srm-logo { width: 72px; height: 72px; border-radius: 50%; border: 2.5px solid var(--blue); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-weight: 800; font-size: 15px; color: var(--blue); background: white; }
+  .role-title { font-size: 2rem; font-weight: 800; margin-bottom: 0.4rem; }
+  .role-subtitle { color: var(--text-muted); margin-bottom: 2.5rem; font-size: 0.95rem; }
+  .role-cards { display: flex; gap: 1.25rem; justify-content: center; flex-wrap: wrap; }
+  .role-card { background: white; border: 1.5px solid var(--border); border-radius: var(--radius); padding: 2.5rem 2rem; width: 220px; cursor: pointer; transition: all 0.2s; text-align: center; }
+  .role-card:hover { border-color: var(--blue); box-shadow: 0 4px 20px rgba(59,91,219,0.15); transform: translateY(-2px); }
+  .role-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.2rem; font-size: 2rem; }
+  .role-name { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.3rem; }
+  .role-desc { color: var(--text-muted); font-size: 0.85rem; }
+
+  /* ===== LOGIN ===== */
+  #page-login { align-items: center; justify-content: center; background: var(--bg); }
+  .login-card { background: white; border-radius: var(--radius); padding: 2.5rem; width: 100%; max-width: 460px; box-shadow: var(--card-shadow); }
+  .login-icon { width: 72px; height: 72px; border-radius: 50%; background: var(--blue); display: flex; align-items: center; justify-content: center; margin: 0 auto 1.2rem; font-size: 2rem; }
+  .login-title { text-align: center; font-size: 1.5rem; font-weight: 700; color: var(--blue); margin-bottom: 0.3rem; }
+  .login-sub { text-align: center; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; }
+  .form-group { margin-bottom: 1.25rem; }
+  .form-label { display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; }
+  .form-input { width: 100%; padding: 0.75rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); font-family: inherit; font-size: 0.95rem; transition: border-color 0.2s; outline: none; }
+  .form-input:focus { border-color: var(--blue); }
+  .btn { width: 100%; padding: 0.85rem; border-radius: var(--radius-sm); font-family: inherit; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.2s; border: none; }
+  .btn-primary { background: var(--blue); color: white; margin-bottom: 0.75rem; }
+  .btn-primary:hover { background: var(--blue-dark); }
+  .btn-outline { background: white; color: var(--blue); border: 1.5px solid var(--blue); }
+  .btn-outline:hover { background: var(--blue-light); }
+  .error-msg { color: var(--red); font-size: 0.85rem; margin-top: 0.75rem; text-align: center; display: none; }
+
+  /* ===== NAVBAR ===== */
+  .navbar { background: white; border-bottom: 1px solid var(--border); padding: 0 2rem; display: flex; align-items: center; gap: 1rem; height: 64px; position: sticky; top: 0; z-index: 100; }
+  .nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+  .nav-logo { width: 40px; height: 40px; border-radius: 50%; border: 2px solid var(--blue); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 11px; color: var(--blue); }
+  .nav-title { font-size: 1rem; font-weight: 700; color: var(--blue); line-height: 1.2; }
+  .nav-sub { font-size: 0.75rem; color: var(--text-muted); }
+  .nav-tabs { display: flex; gap: 0; margin-left: 2rem; }
+  .nav-tab { padding: 0 1.25rem; height: 64px; display: flex; align-items: center; gap: 0.4rem; font-size: 0.9rem; font-weight: 500; cursor: pointer; border-bottom: 2.5px solid transparent; color: var(--text-muted); transition: all 0.2s; text-decoration: none; }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--blue); border-bottom-color: var(--blue); font-weight: 600; }
+  .nav-right { margin-left: auto; display: flex; align-items: center; gap: 1rem; }
+  .status-badge { background: #d1fae5; color: #065f46; padding: 0.3rem 0.75rem; border-radius: 99px; font-size: 0.8rem; font-weight: 600; display: flex; align-items: center; gap: 0.4rem; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #10b981; }
+  .nav-user { font-size: 0.85rem; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem; }
+  .btn-logout { padding: 0.45rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
+  .btn-logout:hover { border-color: var(--red); color: var(--red); }
+
+  /* ===== MAIN CONTENT ===== */
+  .main { padding: 2rem; flex: 1; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* ===== DASHBOARD ===== */
+  .page-header { margin-bottom: 2rem; }
+  .page-header h1 { font-size: 1.75rem; font-weight: 800; }
+  .page-header p { color: var(--text-muted); margin-top: 0.25rem; }
+  .dash-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem; margin-bottom: 1.5rem; }
+  .dash-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; cursor: pointer; transition: all 0.2s; }
+  .dash-card:hover { border-color: var(--blue); box-shadow: 0 4px 20px rgba(59,91,219,0.1); transform: translateY(-2px); }
+  .dash-card-icon { width: 52px; height: 52px; border-radius: 12px; background: #f0f2f5; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; margin-bottom: 1rem; }
+  .dash-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 0.4rem; }
+  .dash-card p { color: var(--text-muted); font-size: 0.875rem; line-height: 1.5; margin-bottom: 0.75rem; }
+  .dash-card-link { color: var(--blue); font-size: 0.875rem; font-weight: 600; }
+  .alert-banner { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: var(--radius-sm); padding: 1rem 1.25rem; display: flex; align-items: flex-start; gap: 0.75rem; }
+  .alert-banner .alert-title { font-weight: 700; color: var(--blue); font-size: 0.9rem; margin-bottom: 0.25rem; }
+  .alert-banner p { color: var(--blue); font-size: 0.85rem; }
+
+  /* ===== SLOTS ===== */
+  .section-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 1.5rem; }
+  .btn-refresh { padding: 0.5rem 1rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; font-family: inherit; font-size: 0.85rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.4rem; }
+  .btn-refresh:hover { border-color: var(--blue); color: var(--blue); }
+  .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem; }
+  .stat-card { background: white; border-radius: var(--radius); padding: 1.25rem; border-top: 4px solid; }
+  .stat-card.total { border-top-color: var(--blue); }
+  .stat-card.available { border-top-color: var(--green); }
+  .stat-card.occupied { border-top-color: var(--red); }
+  .stat-card.booked { border-top-color: var(--orange); }
+  .stat-icon { font-size: 1.5rem; margin-bottom: 0.5rem; }
+  .stat-num { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
+  .stat-label { font-size: 0.75rem; font-weight: 700; color: var(--text-muted); letter-spacing: 0.05em; text-transform: uppercase; }
+  .stat-bar { height: 4px; background: #e5e7eb; border-radius: 2px; margin-top: 0.75rem; }
+  .stat-bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+  .stat-card.available .stat-bar-fill { background: var(--green); }
+  .stat-card.occupied .stat-bar-fill { background: var(--red); }
+  .stat-card.booked .stat-bar-fill { background: var(--orange); }
+
+  .slots-section h2 { font-size: 1.3rem; font-weight: 700; margin-bottom: 0.25rem; }
+  .slots-section p { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 1rem; }
+  .legend { display: flex; gap: 1.5rem; margin-bottom: 1.25rem; align-items: center; }
+  .legend-item { display: flex; align-items: center; gap: 0.4rem; font-size: 0.85rem; font-weight: 500; }
+  .legend-dot { width: 14px; height: 14px; border-radius: 4px; }
+  .legend-dot.available { background: var(--blue); }
+  .legend-dot.occupied { background: #9ca3af; }
+  .legend-dot.booked { background: #1e3a8a; }
+
+  .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.75rem; }
+  .slot-card { border-radius: 12px; padding: 1rem 0.75rem; text-align: center; transition: all 0.2s; }
+  .slot-card.available { background: var(--blue); color: white; cursor: pointer; }
+  .slot-card.available:hover { background: var(--blue-dark); transform: scale(1.03); }
+  .slot-card.occupied { background: #9ca3af; color: white; cursor: not-allowed; }
+  .slot-card.booked-by-me { background: #1e3a8a; color: white; }
+  .slot-card.booked { background: #374151; color: white; cursor: not-allowed; }
+  .slot-name { font-size: 0.95rem; font-weight: 700; margin-bottom: 0.35rem; }
+  .slot-status { font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; background: rgba(255,255,255,0.2); border-radius: 99px; padding: 0.15rem 0.5rem; display: inline-block; margin-bottom: 0.5rem; }
+  .slot-btn { background: white; color: var(--blue); border: none; border-radius: 6px; padding: 0.3rem 0.75rem; font-size: 0.78rem; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .slot-btn:hover { background: #e8eeff; }
+
+  /* ===== BOOKINGS ===== */
+  .booking-card { background: white; border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; max-width: 480px; }
+  .booking-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+  .booking-slot-icon { width: 40px; height: 40px; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+  .booked-badge { background: #fff7ed; color: #c2410c; font-size: 0.75rem; font-weight: 700; padding: 0.3rem 0.75rem; border-radius: 99px; }
+  .booking-detail { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; }
+  .booking-detail-icon { font-size: 1rem; margin-top: 0.1rem; }
+  .booking-detail-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .booking-detail-value { font-size: 0.95rem; font-weight: 600; }
+  .booking-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid var(--border); }
+  .booking-id { font-size: 0.8rem; color: var(--text-muted); }
+  .btn-release { padding: 0.5rem 1.25rem; border: 1.5px solid var(--red); border-radius: var(--radius-sm); background: white; color: var(--red); font-family: inherit; font-size: 0.875rem; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+  .btn-release:hover { background: #fff1f1; }
+  .no-bookings { text-align: center; padding: 3rem; color: var(--text-muted); }
+  .no-bookings .nb-icon { font-size: 3rem; margin-bottom: 1rem; }
+
+  /* ===== TOAST ===== */
+  .toast { position: fixed; top: 1.5rem; right: 1.5rem; background: white; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 1rem 1.25rem; box-shadow: 0 8px 30px rgba(0,0,0,0.12); display: flex; align-items: center; gap: 0.75rem; font-size: 0.9rem; font-weight: 500; z-index: 1000; transform: translateX(120%); transition: transform 0.3s; max-width: 360px; }
+  .toast.show { transform: translateX(0); }
+  .toast.success { border-left: 4px solid var(--green); }
+  .toast.error { border-left: 4px solid var(--red); }
+
+  /* ===== MODAL ===== */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: white; border-radius: var(--radius); padding: 2rem; width: 100%; max-width: 420px; }
+  .modal h3 { font-size: 1.2rem; font-weight: 700; margin-bottom: 0.5rem; }
+  .modal p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem; }
+  .modal-actions { display: flex; gap: 0.75rem; }
+  .btn-cancel { flex: 1; padding: 0.75rem; border: 1.5px solid var(--border); border-radius: var(--radius-sm); background: white; font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+  .btn-confirm { flex: 1; padding: 0.75rem; background: var(--blue); color: white; border: none; border-radius: var(--radius-sm); font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+  .btn-confirm:hover { background: var(--blue-dark); }
+
+  @media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+    .navbar { padding: 0 1rem; }
+    .main { padding: 1rem; }
+    .nav-tabs { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== PAGE: ROLE SELECT ===== -->
+<div class="page active" id="page-role">
+  <div class="role-container">
+    <div class="srm-logo">SRM</div>
+    <h1 class="role-title">SRM Parking System</h1>
+    <p class="role-subtitle">Welcome! Please select your role to sign in</p>
+    <div class="role-cards">
+      <div class="role-card" onclick="selectRole('faculty')">
+        <div class="role-icon">👥</div>
+        <div class="role-name">Faculty</div>
+        <div class="role-desc">Staff and Faculty Members</div>
+      </div>
+      <div class="role-card" onclick="selectRole('student')">
+        <div class="role-icon">🎓</div>
+        <div class="role-name">Student</div>
+        <div class="role-desc">University Students</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: LOGIN ===== -->
+<div class="page" id="page-login">
+  <div style="display:flex;align-items:center;justify-content:center;flex:1;padding:2rem;">
+    <div class="login-card">
+      <div class="login-icon" id="login-icon">🎓</div>
+      <h2 class="login-title" id="login-title">Student Login</h2>
+      <p class="login-sub">Enter your credentials to access the parking system</p>
+      <div class="form-group">
+        <label class="form-label">ID Number</label>
+        <input class="form-input" id="login-email" type="text" placeholder="ak8815@srmist.edu.in" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-input" id="login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()" />
+      </div>
+      <div class="error-msg" id="login-error">Invalid credentials. Please try again.</div>
+      <br/>
+      <button class="btn btn-primary" onclick="doLogin()">Login</button>
+      <button class="btn btn-outline" onclick="goBack()">← Back</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PAGE: DASHBOARD ===== -->
+<div class="page" id="page-dashboard">
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="nav-brand">
+      <div class="nav-logo">SRM</div>
+      <div>
+        <div class="nav-title">Smart Bike Parking System</div>
+        <div class="nav-sub">YOLO-Powered Vacancy Detection & Booking</div>
+      </div>
+    </div>
+    <div class="nav-tabs">
+      <a class="nav-tab active" onclick="switchTab('home')" href="#">🏠 Home</a>
+      <a class="nav-tab" onclick="switchTab('slots')" href="#">🅿️ Slots</a>
+      <a class="nav-tab" onclick="switchTab('bookings')" href="#">📋 Bookings</a>
+    </div>
+    <div class="nav-right">
+      <div class="status-badge"><div class="status-dot"></div>System Online</div>
+      <div class="nav-user">👤 <span id="nav-email"></span></div>
+      <button class="btn-logout" onclick="doLogout()">⊙ Logout</button>
+    </div>
+  </nav>
+
+  <div class="main">
+    <!-- HOME TAB -->
+    <div class="tab-content active" id="tab-home">
+      <div class="page-header">
+        <h1>Dashboard</h1>
+        <p>Welcome back, <strong id="dash-email"></strong></p>
+      </div>
+      <div class="dash-cards">
+        <div class="dash-card" onclick="switchTab('slots')">
+          <div class="dash-card-icon">📍</div>
+          <h3>Check Parking Status</h3>
+          <p>View available parking spaces and slot vacancy in real-time</p>
+          <div class="dash-card-link">Click to continue →</div>
+        </div>
+        <div class="dash-card" onclick="switchTab('bookings')">
+          <div class="dash-card-icon">🚲</div>
+          <h3>My Parking Slot</h3>
+          <p>View and manage your current parking reservation</p>
+          <div class="dash-card-link">Click to continue →</div>
+        </div>
+      </div>
+      <div class="alert-banner">
+        <span style="font-size:1.2rem">⚠️</span>
+        <div>
+          <div class="alert-title">Important Reminder</div>
+          <p>Please park only in your assigned slot. Unauthorized parking may result in penalties. Always release your slot after leaving.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLOTS TAB -->
+    <div class="tab-content" id="tab-slots">
+      <div class="section-header">
+        <div>
+          <h1 style="font-size:1.75rem;font-weight:800;">Parking Overview</h1>
+          <p style="color:var(--text-muted);margin-top:0.25rem;">Real-time slot availability from YOLO detection</p>
+        </div>
+        <button class="btn-refresh" onclick="loadSlots()">↻ Refresh</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-icon">🅿️</div>
+          <div class="stat-num" id="stat-total">48</div>
+          <div class="stat-label">Total Slots</div>
+        </div>
+        <div class="stat-card available">
+          <div class="stat-icon">✅</div>
+          <div class="stat-num" id="stat-available">0</div>
+          <div class="stat-label">Available</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="bar-available" style="width:0%"></div></div>
+        </div>
+        <div class="stat-card occupied">
+          <div class="stat-icon">🔴</div>
+          <div class="stat-num" id="stat-occupied">0</div>
+          <div class="stat-label">Occupied</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="bar-occupied" style="width:0%"></div></div>
+        </div>
+        <div class="stat-card booked">
+          <div class="stat-icon">🟠</div>
+          <div class="stat-num" id="stat-booked">0</div>
+          <div class="stat-label">Booked</div>
+          <div class="stat-bar"><div class="stat-bar-fill" id="bar-booked" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="slots-section">
+        <h2>Parking Slot Grid</h2>
+        <p>Select an available slot to make a booking</p>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot available"></div> Available (<span id="leg-available">0</span>)</div>
+          <div class="legend-item"><div class="legend-dot occupied"></div> Occupied (<span id="leg-occupied">0</span>)</div>
+          <div class="legend-item"><div class="legend-dot booked"></div> Booked</div>
+        </div>
+        <div class="slots-grid" id="slots-grid">
+          <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)">Loading slots...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOOKINGS TAB -->
+    <div class="tab-content" id="tab-bookings">
+      <div class="section-header">
+        <div>
+          <h1 style="font-size:1.75rem;font-weight:800;">My Parking Slot</h1>
+          <p style="color:var(--text-muted);margin-top:0.25rem;">View and manage your current parking reservations</p>
+        </div>
+        <button class="btn-refresh" onclick="loadBookings()">↻ Refresh</button>
+      </div>
+      <h2 style="font-size:1.2rem;font-weight:700;margin-bottom:0.25rem;">Active Bookings</h2>
+      <p style="color:var(--text-muted);font-size:0.875rem;margin-bottom:1.25rem;">Manage and cancel existing slot reservations</p>
+      <div id="bookings-container"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BOOK MODAL ===== -->
+<div class="modal-overlay" id="modal-book">
+  <div class="modal">
+    <h3>Book Parking Slot</h3>
+    <p>You are about to book slot <strong id="modal-slot-name"></strong>. A confirmation email will be sent to your SRMIST email.</p>
+    <div class="form-group">
+      <label class="form-label">Your Name</label>
+      <input class="form-input" id="modal-name" type="text" placeholder="Enter your full name"/>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Vehicle Number (optional)</label>
+      <input class="form-input" id="modal-vehicle" type="text" placeholder="e.g. TN07AB1234"/>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmBooking()">Confirm Booking</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'http://localhost:5000/api';
+let currentUser = null;
+let currentRole = null;
+let selectedSlot = null;
+
+// ===== NAVIGATION =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+}
+
+function selectRole(role) {
+  currentRole = role;
+  document.getElementById('login-title').textContent = role === 'student' ? 'Student Login' : 'Faculty Login';
+  document.getElementById('login-icon').textContent = role === 'student' ? '🎓' : '👥';
+  document.getElementById('login-email').placeholder = role === 'student' ? 'ak8815@srmist.edu.in' : 'faculty@srmist.edu.in';
+  showPage('login');
+}
+
+function goBack() {
+  showPage('role');
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  const tabs = document.querySelectorAll('.nav-tab');
+  const map = { home: 0, slots: 1, bookings: 2 };
+  tabs[map[tab]].classList.add('active');
+  if (tab === 'slots') loadSlots();
+  if (tab === 'bookings') loadBookings();
+}
+
+// ===== AUTH =====
+async function doLogin() {
+  const email = document.getElementById('login-email').value.trim();
+  const password = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  errEl.style.display = 'none';
+
+  if (!email || !password) { errEl.textContent = 'Please fill in all fields.'; errEl.style.display = 'block'; return; }
+
+  // Validate email format: 2 letters + digits + @srmist.edu.in
+  const emailRegex = /^[a-zA-Z]{2}\d+@srmist\.edu\.in$/;
+  if (currentRole === 'student' && !emailRegex.test(email)) {
+    errEl.textContent = 'Invalid email. Format: 2 initials + numbers + @srmist.edu.in (e.g. ak8815@srmist.edu.in)';
+    errEl.style.display = 'block'; return;
+  }
+
+  try {
+    const res = await fetch(`${API}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password, role: currentRole })
+    });
+    const data = await res.json();
+    if (data.success) {
+      currentUser = { email, role: currentRole, name: data.name || email.split('@')[0].toUpperCase() };
+      document.getElementById('nav-email').textContent = email;
+      document.getElementById('dash-email').textContent = email;
+      showPage('dashboard');
+      switchTab('home');
+    } else {
+      errEl.textContent = data.message || 'Invalid credentials.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Cannot connect to server. Make sure backend is running.';
+    errEl.style.display = 'block';
+  }
+}
+
+function doLogout() {
+  currentUser = null;
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-password').value = '';
+  showPage('role');
+}
+
+// ===== SLOTS =====
+async function loadSlots() {
+  try {
+    const res = await fetch(`${API}/slots`);
+    const data = await res.json();
+    renderSlots(data.slots);
+    updateStats(data.slots);
+  } catch(e) {
+    document.getElementById('slots-grid').innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--red)">⚠️ Cannot connect to backend</div>';
+  }
+}
+
+function updateStats(slots) {
+  const total = slots.length;
+  const available = slots.filter(s => s.status === 'available').length;
+  const occupied = slots.filter(s => s.status === 'occupied').length;
+  const booked = slots.filter(s => s.status === 'booked').length;
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-available').textContent = available;
+  document.getElementById('stat-occupied').textContent = occupied;
+  document.getElementById('stat-booked').textContent = booked;
+  document.getElementById('bar-available').style.width = (available/total*100) + '%';
+  document.getElementById('bar-occupied').style.width = (occupied/total*100) + '%';
+  document.getElementById('bar-booked').style.width = (booked/total*100) + '%';
+  document.getElementById('leg-available').textContent = available;
+  document.getElementById('leg-occupied').textContent = occupied;
+}
+
+function renderSlots(slots) {
+  const grid = document.getElementById('slots-grid');
+  grid.innerHTML = '';
+  slots.forEach(slot => {
+    const isMyBooking = slot.booked_by === currentUser?.email;
+    let cls = slot.status === 'available' ? 'available' : slot.status === 'occupied' ? 'occupied' : isMyBooking ? 'booked-by-me' : 'booked';
+    const div = document.createElement('div');
+    div.className = 'slot-card ' + cls;
+    div.innerHTML = `
+      <div class="slot-name">${slot.id.replace('_', '-').toUpperCase()}</div>
+      <div class="slot-status">${slot.status.toUpperCase()}</div>
+      ${slot.status === 'available' ? `<button class="slot-btn" onclick="openBookModal('${slot.id}')">Book</button>` : ''}
+      ${isMyBooking ? `<div style="font-size:0.75rem;opacity:0.8">Your slot</div>` : ''}
+    `;
+    grid.appendChild(div);
+  });
+}
+
+// ===== BOOKING =====
+function openBookModal(slotId) {
+  selectedSlot = slotId;
+  document.getElementById('modal-slot-name').textContent = slotId.replace('_', '-').toUpperCase();
+  document.getElementById('modal-name').value = '';
+  document.getElementById('modal-vehicle').value = '';
+  document.getElementById('modal-book').classList.add('show');
+}
+
+function closeModal() {
+  document.getElementById('modal-book').classList.remove('show');
+  selectedSlot = null;
+}
+
+async function confirmBooking() {
+  const name = document.getElementById('modal-name').value.trim();
+  if (!name) { showToast('Please enter your name', 'error'); return; }
+  const vehicle = document.getElementById('modal-vehicle').value.trim();
+  try {
+    const res = await fetch(`${API}/book`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slot_id: selectedSlot, email: currentUser.email, name, vehicle })
+    });
+    const data = await res.json();
+    if (data.success) {
+      closeModal();
+      showToast(`✅ Slot ${selectedSlot.replace('_','-').toUpperCase()} booked! Confirmation email sent. 🎉`, 'success');
+      loadSlots();
+    } else {
+      showToast(data.message || 'Booking failed', 'error');
+    }
+  } catch(e) {
+    showToast('Cannot connect to server', 'error');
+  }
+}
+
+// ===== BOOKINGS TAB =====
+async function loadBookings() {
+  try {
+    const res = await fetch(`${API}/bookings?email=${currentUser.email}`);
+    const data = await res.json();
+    renderBookings(data.bookings);
+  } catch(e) {
+    document.getElementById('bookings-container').innerHTML = '<p style="color:var(--red)">⚠️ Cannot connect to backend</p>';
+  }
+}
+
+function renderBookings(bookings) {
+  const container = document.getElementById('bookings-container');
+  if (!bookings || bookings.length === 0) {
+    container.innerHTML = `<div class="no-bookings"><div class="nb-icon">🚲</div><p>No active bookings found.</p><p style="margin-top:0.5rem;font-size:0.85rem">Go to Slots to book a parking space.</p></div>`;
+    return;
+  }
+  container.innerHTML = bookings.map(b => `
+    <div class="booking-card" style="margin-bottom:1rem">
+      <div class="booking-card-header">
+        <div class="booking-slot-icon">🅿️</div>
+        <span class="booked-badge">BOOKED</span>
+      </div>
+      <div class="booking-detail">
+        <div class="booking-detail-icon">👤</div>
+        <div><div class="booking-detail-label">Name / ID</div><div class="booking-detail-value">${b.name.toUpperCase()}</div></div>
+      </div>
+      <div class="booking-detail">
+        <div class="booking-detail-icon">🚲</div>
+        <div><div class="booking-detail-label">Vehicle</div><div class="booking-detail-value">${b.vehicle || '—'}</div></div>
+      </div>
+      <div class="booking-detail">
+        <div class="booking-detail-icon">🕐</div>
+        <div><div class="booking-detail-label">Time</div><div class="booking-detail-value">${b.time || '—'}</div></div>
+      </div>
+      <div class="booking-detail">
+        <div class="booking-detail-icon">🅿️</div>
+        <div><div class="booking-detail-label">Slot</div><div class="booking-detail-value">${b.slot_id.replace('_','-').toUpperCase()}</div></div>
+      </div>
+      <div class="booking-footer">
+        <div class="booking-id">ID #${b.booking_id}</div>
+        <button class="btn-release" onclick="releaseSlot('${b.slot_id}','${b.booking_id}')">Release Slot</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+async function releaseSlot(slotId, bookingId) {
+  if (!confirm('Release this parking slot?')) return;
+  try {
+    const res = await fetch(`${API}/release`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slot_id: slotId, booking_id: bookingId, email: currentUser.email })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Slot released successfully', 'success');
+      loadBookings();
+    } else {
+      showToast(data.message || 'Failed to release slot', 'error');
+    }
+  } catch(e) {
+    showToast('Cannot connect to server', 'error');
+  }
+}
+
+// ===== TOAST =====
+function showToast(msg, type = 'success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  setTimeout(() => t.classList.remove('show'), 4000);
+}
+</script>
+</body>
+</html>
